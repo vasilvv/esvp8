@@ -188,8 +188,8 @@ INSTALL-LIBS-$(CONFIG_SHARED) += $(foreach p,$(VS_PLATFORMS),$(LIBSUBDIR)/$(p)/v
 INSTALL-LIBS-$(CONFIG_SHARED) += $(foreach p,$(VS_PLATFORMS),$(LIBSUBDIR)/$(p)/vpx.exp)
 endif
 else
-INSTALL-LIBS-$(CONFIG_STATIC) += $(LIBSUBDIR)/libvpx.a
-INSTALL-LIBS-$(CONFIG_DEBUG_LIBS) += $(LIBSUBDIR)/libvpx_g.a
+INSTALL-LIBS-$(CONFIG_STATIC) += $(LIBSUBDIR)/libesvpx.a
+INSTALL-LIBS-$(CONFIG_DEBUG_LIBS) += $(LIBSUBDIR)/libesvpx_g.a
 endif
 
 CODEC_SRCS=$(call enabled,CODEC_SRCS)
@@ -199,7 +199,7 @@ INSTALL-SRCS-$(CONFIG_CODEC_SRCS) += $(call enabled,CODEC_EXPORTS)
 
 # Generate a list of all enabled sources, in particular for exporting to gyp
 # based build systems.
-libvpx_srcs.txt:
+libesvpx_srcs.txt:
 	@echo "    [CREATE] $@"
 	@echo $(CODEC_SRCS) | xargs -n1 echo | sort -u > $@
 
@@ -252,56 +252,56 @@ endif
 else
 LIBVPX_OBJS=$(call objs,$(CODEC_SRCS))
 OBJS-$(BUILD_LIBVPX) += $(LIBVPX_OBJS)
-LIBS-$(if $(BUILD_LIBVPX),$(CONFIG_STATIC)) += $(BUILD_PFX)libvpx.a $(BUILD_PFX)libvpx_g.a
-$(BUILD_PFX)libvpx_g.a: $(LIBVPX_OBJS)
+LIBS-$(if $(BUILD_LIBVPX),$(CONFIG_STATIC)) += $(BUILD_PFX)libesvpx.a $(BUILD_PFX)libesvpx_g.a
+$(BUILD_PFX)libesvpx_g.a: $(LIBVPX_OBJS)
 
 
 BUILD_LIBVPX_SO         := $(if $(BUILD_LIBVPX),$(CONFIG_SHARED))
 
 ifeq ($(filter darwin%,$(TGT_OS)),$(TGT_OS))
-LIBVPX_SO               := libvpx.$(VERSION_MAJOR).dylib
-EXPORT_FILE             := libvpx.syms
+LIBVPX_SO               := libesvpx.$(VERSION_MAJOR).dylib
+EXPORT_FILE             := libesvpx.syms
 LIBVPX_SO_SYMLINKS      := $(addprefix $(LIBSUBDIR)/, \
-                             libvpx.dylib  )
+                             libesvpx.dylib  )
 else
-LIBVPX_SO               := libvpx.so.$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)
-EXPORT_FILE             := libvpx.ver
-SYM_LINK                := libvpx.so
+LIBVPX_SO               := libesvpx.so.$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)
+EXPORT_FILE             := libesvpx.ver
+SYM_LINK                := libesvpx.so
 LIBVPX_SO_SYMLINKS      := $(addprefix $(LIBSUBDIR)/, \
-                             libvpx.so libvpx.so.$(VERSION_MAJOR) \
-                             libvpx.so.$(VERSION_MAJOR).$(VERSION_MINOR))
+                             libesvpx.so libesvpx.so.$(VERSION_MAJOR) \
+                             libesvpx.so.$(VERSION_MAJOR).$(VERSION_MINOR))
 endif
 
 LIBS-$(BUILD_LIBVPX_SO) += $(BUILD_PFX)$(LIBVPX_SO)\
                            $(notdir $(LIBVPX_SO_SYMLINKS))
 $(BUILD_PFX)$(LIBVPX_SO): $(LIBVPX_OBJS) $(EXPORT_FILE)
 $(BUILD_PFX)$(LIBVPX_SO): extralibs += -lm
-$(BUILD_PFX)$(LIBVPX_SO): SONAME = libvpx.so.$(VERSION_MAJOR)
+$(BUILD_PFX)$(LIBVPX_SO): SONAME = libesvpx.so.$(VERSION_MAJOR)
 $(BUILD_PFX)$(LIBVPX_SO): EXPORTS_FILE = $(EXPORT_FILE)
 
-libvpx.ver: $(call enabled,CODEC_EXPORTS)
+libesvpx.ver: $(call enabled,CODEC_EXPORTS)
 	@echo "    [CREATE] $@"
 	$(qexec)echo "{ global:" > $@
 	$(qexec)for f in $?; do awk '{print $$2";"}' < $$f >>$@; done
 	$(qexec)echo "local: *; };" >> $@
-CLEAN-OBJS += libvpx.ver
+CLEAN-OBJS += libesvpx.ver
 
-libvpx.syms: $(call enabled,CODEC_EXPORTS)
+libesvpx.syms: $(call enabled,CODEC_EXPORTS)
 	@echo "    [CREATE] $@"
 	$(qexec)awk '{print "_"$$2}' $^ >$@
-CLEAN-OBJS += libvpx.syms
+CLEAN-OBJS += libesvpx.syms
 
-define libvpx_symlink_template
+define libesvpx_symlink_template
 $(1): $(2)
 	@echo "    [LN]     $(2) $$@"
 	$(qexec)mkdir -p $$(dir $$@)
 	$(qexec)ln -sf $(2) $$@
 endef
 
-$(eval $(call libvpx_symlink_template,\
+$(eval $(call libesvpx_symlink_template,\
     $(addprefix $(BUILD_PFX),$(notdir $(LIBVPX_SO_SYMLINKS))),\
     $(BUILD_PFX)$(LIBVPX_SO)))
-$(eval $(call libvpx_symlink_template,\
+$(eval $(call libesvpx_symlink_template,\
     $(addprefix $(DIST_DIR)/,$(LIBVPX_SO_SYMLINKS)),\
     $(LIBVPX_SO)))
 
@@ -313,7 +313,7 @@ INSTALL-LIBS-$(BUILD_LIBVPX_SO) += $(LIBSUBDIR)/$(LIBVPX_SO)
 LIBS-$(BUILD_LIBVPX) += vpx.pc
 vpx.pc: config.mk libs.mk
 	@echo "    [CREATE] $@"
-	$(qexec)echo '# pkg-config file from libvpx $(VERSION_STRING)' > $@
+	$(qexec)echo '# pkg-config file from libesvpx $(VERSION_STRING)' > $@
 	$(qexec)echo 'prefix=$(PREFIX)' >> $@
 	$(qexec)echo 'exec_prefix=$${prefix}' >> $@
 	$(qexec)echo 'libdir=$${prefix}/$(LIBSUBDIR)' >> $@
@@ -336,8 +336,8 @@ INSTALL_MAPS += $(LIBSUBDIR)/pkgconfig/%.pc %.pc
 CLEAN-OBJS += vpx.pc
 endif
 
-LIBS-$(LIPO_LIBVPX) += libvpx.a
-$(eval $(if $(LIPO_LIBVPX),$(call lipo_lib_template,libvpx.a)))
+LIBS-$(LIPO_LIBVPX) += libesvpx.a
+$(eval $(if $(LIPO_LIBVPX),$(call lipo_lib_template,libesvpx.a)))
 
 #
 # Rule to make assembler configuration file from C configuration file
@@ -370,22 +370,22 @@ CLEAN-OBJS += $(BUILD_PFX)vpx_version.h
 
 
 ##
-## libvpx test directives
+## libesvpx test directives
 ##
 ifeq ($(CONFIG_UNIT_TESTS),yes)
 LIBVPX_TEST_DATA_PATH ?= .
 
 include $(SRC_PATH_BARE)/test/test.mk
 LIBVPX_TEST_SRCS=$(addprefix test/,$(call enabled,LIBVPX_TEST_SRCS))
-LIBVPX_TEST_BINS=./test_libvpx$(EXE_SFX)
+LIBVPX_TEST_BINS=./test_libesvpx$(EXE_SFX)
 LIBVPX_TEST_DATA=$(addprefix $(LIBVPX_TEST_DATA_PATH)/,\
                      $(call enabled,LIBVPX_TEST_DATA))
-libvpx_test_data_url=http://downloads.webmproject.org/test_data/libvpx/$(1)
+libesvpx_test_data_url=http://downloads.webmproject.org/test_data/libvpx/$(1)
 
 $(LIBVPX_TEST_DATA):
 	@echo "    [DOWNLOAD] $@"
 	$(qexec)trap 'rm -f $@' INT TERM &&\
-            curl -L -o $@ $(call libvpx_test_data_url,$(@F))
+            curl -L -o $@ $(call libesvpx_test_data_url,$(@F))
 
 testdata:: $(LIBVPX_TEST_DATA)
 	$(qexec)if [ -x "$$(which sha1sum)" ]; then\
@@ -419,12 +419,12 @@ gtest.vcproj: $(SRC_PATH_BARE)/third_party/googletest/src/src/gtest-all.cc
 
 PROJECTS-$(CONFIG_MSVS) += gtest.vcproj
 
-test_libvpx.vcproj: $(LIBVPX_TEST_SRCS)
+test_libesvpx.vcproj: $(LIBVPX_TEST_SRCS)
 	@echo "    [CREATE] $@"
 	$(qexec)$(SRC_PATH_BARE)/build/make/gen_msvs_proj.sh \
             --exe \
             --target=$(TOOLCHAIN) \
-            --name=test_libvpx \
+            --name=test_libesvpx \
             -D_VARIADIC_MAX=10 \
             --proj-guid=CD837F5F-52D8-4314-A370-895D614166A7 \
             --ver=$(CONFIG_VS_VERSION) \
@@ -433,7 +433,7 @@ test_libvpx.vcproj: $(LIBVPX_TEST_SRCS)
             -I. -I"$(SRC_PATH_BARE)/third_party/googletest/src/include" \
             -L. -l$(CODEC_LIB) -lwinmm -l$(GTEST_LIB) $^
 
-PROJECTS-$(CONFIG_MSVS) += test_libvpx.vcproj
+PROJECTS-$(CONFIG_MSVS) += test_libesvpx.vcproj
 
 test:: testdata
 	@set -e; for t in $(addprefix Win32/Release/,$(notdir $(LIBVPX_TEST_BINS:.cc=.exe))); do $$t; done
@@ -460,7 +460,7 @@ INSTALL-SRCS-$(CONFIG_CODEC_SRCS) += $(patsubst $(SRC_PATH_BARE)/%,%,\
     $(shell find $(SRC_PATH_BARE)/third_party/googletest -type f))
 INSTALL-SRCS-$(CONFIG_CODEC_SRCS) += $(LIBVPX_TEST_SRCS)
 
-CODEC_LIB=$(if $(CONFIG_DEBUG_LIBS),vpx_g,vpx)
+CODEC_LIB=$(if $(CONFIG_DEBUG_LIBS),esvpx_g,esvpx)
 CODEC_LIB_SUF=$(if $(CONFIG_SHARED),.so,.a)
 $(foreach bin,$(LIBVPX_TEST_BINS),\
     $(if $(BUILD_LIBVPX),$(eval $(bin): \

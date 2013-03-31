@@ -141,7 +141,7 @@ all_platforms="${all_platforms} generic-gnu"
 
 # all_targets is a list of all targets that can be configured
 # note that these should be in dependency order for now.
-all_targets="libs examples docs"
+all_targets="libs docs"
 
 # all targets available are enabled, by default.
 for t in ${all_targets}; do
@@ -182,25 +182,28 @@ for d in vp8 vp9; do
     [ -d ${source_path}/${d} ] && disable alt_tree_layout;
 done
 
-if ! enabled alt_tree_layout; then
-# development environment
-[ -d ${source_path}/vp8 ] && CODECS="${CODECS} vp8_encoder vp8_decoder"
-[ -d ${source_path}/vp9 ] && CODECS="${CODECS} vp9_encoder vp9_decoder"
-else
-# customer environment
-[ -f ${source_path}/../include/vpx/vp8cx.h ] && CODECS="${CODECS} vp8_encoder"
-[ -f ${source_path}/../include/vpx/vp8dx.h ] && CODECS="${CODECS} vp8_decoder"
-[ -f ${source_path}/../include/vpx/vp9cx.h ] && CODECS="${CODECS} vp9_encoder"
-[ -f ${source_path}/../include/vpx/vp9dx.h ] && CODECS="${CODECS} vp9_decoder"
-[ -f ${source_path}/../include/vpx/vp8cx.h ] || disable vp8_encoder
-[ -f ${source_path}/../include/vpx/vp8dx.h ] || disable vp8_decoder
-[ -f ${source_path}/../include/vpx/vp9cx.h ] || disable vp9_encoder
-[ -f ${source_path}/../include/vpx/vp9dx.h ] || disable vp9_decoder
+# This code is disabled because only VP8 is used.
+# -- vasilvv, 03/28/13
 
-[ -f ${source_path}/../lib/*/*mt.lib ] && soft_enable static_msvcrt
-fi
+# if ! enabled alt_tree_layout; then
+# # development environment
+# [ -d ${source_path}/vp8 ] && CODECS="${CODECS} vp8_encoder vp8_decoder"
+# [ -d ${source_path}/vp9 ] && CODECS="${CODECS} vp9_encoder vp9_decoder"
+# else
+# # customer environment
+# [ -f ${source_path}/../include/vpx/vp8cx.h ] && CODECS="${CODECS} vp8_encoder"
+# [ -f ${source_path}/../include/vpx/vp8dx.h ] && CODECS="${CODECS} vp8_decoder"
+# [ -f ${source_path}/../include/vpx/vp9cx.h ] && CODECS="${CODECS} vp9_encoder"
+# [ -f ${source_path}/../include/vpx/vp9dx.h ] && CODECS="${CODECS} vp9_decoder"
+# [ -f ${source_path}/../include/vpx/vp8cx.h ] || disable vp8_encoder
+# [ -f ${source_path}/../include/vpx/vp8dx.h ] || disable vp8_decoder
+# [ -f ${source_path}/../include/vpx/vp9cx.h ] || disable vp9_encoder
+# [ -f ${source_path}/../include/vpx/vp9dx.h ] || disable vp9_decoder
+# 
+# [ -f ${source_path}/../lib/*/*mt.lib ] && soft_enable static_msvcrt
+# fi
 
-CODECS="$(echo ${CODECS} | tr ' ' '\n')"
+CODECS="vp8_encoder vp8_decoder"
 CODEC_FAMILIES="$(for c in ${CODECS}; do echo ${c%_*}; done | sort | uniq)"
 
 ARCH_LIST="
@@ -318,7 +321,6 @@ CMDLINE_SELECT="
     runtime_cpu_detect
 
     libs
-    examples
     docs
     libc
     as
@@ -478,7 +480,7 @@ EOF
     #
     # Write makefiles for all enabled targets
     #
-    for tgt in libs examples docs solution; do
+    for tgt in libs docs solution; do
         local tgt_fn="$tgt-$toolchain.mk"
 
         if enabled $tgt; then
