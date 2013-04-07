@@ -980,7 +980,7 @@ static void init_frame(VP8D_COMP *pbi)
 
 }
 
-int vp8_decode_frame(VP8D_COMP *pbi)
+int vp8_decode_frame(VP8D_COMP *pbi, unsigned char dry_run)
 {
     vp8_reader *const bc = &pbi->mbc[8];
     VP8_COMMON *const pc = &pbi->common;
@@ -1346,6 +1346,12 @@ int vp8_decode_frame(VP8D_COMP *pbi)
 
     /* clear out the coeff buffer */
     vpx_memset(xd->qcoeff, 0, sizeof(xd->qcoeff));
+
+	if (dry_run)
+	{
+        pbi->decoded_key_frame = 1;
+		return 0;
+	}
 
     vp8_decode_mode_mvs(pbi);
 

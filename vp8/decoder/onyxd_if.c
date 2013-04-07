@@ -352,7 +352,7 @@ int vp8dx_receive_compressed_data(VP8D_COMP *pbi, size_t size,
 
     pbi->common.error.setjmp = 1;
 
-    retcode = vp8_decode_frame(pbi);
+    retcode = vp8_decode_frame(pbi, 0);
 
     if (retcode < 0)
     {
