@@ -433,11 +433,12 @@ update_fragments(vpx_codec_alg_priv_t  *ctx,
     return 1;
 }
 
-static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t  *ctx,
+static vpx_codec_err_t vp8_decode_internal(vpx_codec_alg_priv_t  *ctx,
                                   const uint8_t         *data,
                                   unsigned int            data_sz,
                                   void                    *user_priv,
-                                  long                    deadline)
+                                  long                    deadline,
+                                  uint8_t                 dry_run)
 {
     vpx_codec_err_t res = VPX_CODEC_OK;
     unsigned int resolution_change = 0;
@@ -639,7 +640,7 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t  *ctx,
         pbi->fragments = ctx->fragments;
 
         ctx->user_priv = user_priv;
-        if (vp8dx_receive_compressed_data(pbi, data_sz, data, deadline))
+        if (vp8dx_receive_compressed_data(pbi, data_sz, data, deadline, dry_run))
         {
             res = update_error_state(ctx, &pbi->common.error);
         }
@@ -649,6 +650,86 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t  *ctx,
     }
 
     return res;
+}
+
+static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t  *ctx,
+                                  const uint8_t         *data,
+                                  unsigned int            data_sz,
+                                  void                    *user_priv,
+                                  long                    deadline)
+{
+    return vp8_decode_internal(ctx, data, data_sz, user_priv, deadline, 1);
+}
+
+
+static vpx_codec_err_t vp8_read_header(vpx_codec_alg_priv_t  *ctx,
+                                                 const uint8_t         *data,
+                                                 unsigned int     data_sz,
+                                                 void        *user_priv,
+                                                 vpx_frame_header_info *header,
+                                                 long         deadline)
+{
+    vpx_codec_err_t res;
+
+    res = vp8_decode_internal(ctx, data, data_sz, user_priv, deadline, 0);
+    if (res)
+    {
+        return res;
+    }
+
+    VP8D_COMP *pbi = ctx->yv12_frame_buffers.pbi[0];
+    VP8_COMMON *const pc = &pbi->common;
+
+    if (pc->frame_type == KEY_FRAME)
+    {
+        header->is_keyframe = 1;
+        header->refresh_golden = copy_current;
+        header->refresh_altref = copy_current;
+    }
+    else
+    {
+        header->is_keyframe = 0;
+
+        if (pc->refresh_golden_frame)
+        {
+            header->refresh_golden = copy_current;
+        }
+        else
+        {
+            switch (pc->copy_buffer_to_gf)
+            {
+                case 0:
+                    header->refresh_golden = copy_none;
+                    break;
+                case 1:
+                    header->refresh_golden = copy_last;
+                    break;
+                case 2:
+                    header->refresh_golden = copy_altref;
+                    break;
+            }
+        }
+
+        if (pc->refresh_alt_ref_frame)
+        {
+            header->refresh_altref = copy_current;
+        }
+        else
+        {
+            switch (pc->copy_buffer_to_gf)
+            {
+                case 0:
+                    header->refresh_altref = copy_none;
+                    break;
+                case 1:
+                    header->refresh_altref = copy_last;
+                    break;
+                case 2:
+                    header->refresh_altref = copy_golden;
+                    break;
+            }
+        }
+    }
 }
 
 static vpx_image_t *vp8_get_frame(vpx_codec_alg_priv_t  *ctx,
@@ -1005,6 +1086,7 @@ CODEC_INTERFACE(vpx_codec_vp8_dx) =
         vp8_get_si,       /* vpx_codec_get_si_fn_t     get_si; */
         vp8_decode,       /* vpx_codec_decode_fn_t     decode; */
         vp8_get_frame,    /* vpx_codec_frame_get_fn_t  frame_get; */
+        vp8_read_header,
     },
     { /* encoder functions */
         NOT_IMPLEMENTED,

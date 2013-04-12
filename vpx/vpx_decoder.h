@@ -188,6 +188,20 @@ extern "C" {
   vpx_codec_err_t vpx_codec_get_stream_info(vpx_codec_ctx_t         *ctx,
                                             vpx_codec_stream_info_t *si);
 
+  typedef enum { copy_none, copy_current, copy_last, copy_golden, copy_altref } vpx_frame_buffer_action;
+  
+  typedef struct {
+      unsigned char is_keyframe;
+      vpx_frame_buffer_action refresh_golden;
+      vpx_frame_buffer_action refresh_altref;
+  } vpx_frame_header_info;
+
+  vpx_codec_err_t vpx_codec_read_header(vpx_codec_ctx_t    *ctx,
+                                   const uint8_t        *data,
+                                   unsigned int    data_sz,
+                                   void       *user_priv,
+                                   vpx_frame_header_info *header,
+                                   long        deadline);
 
   /*!\brief Decode data
    *

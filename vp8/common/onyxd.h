@@ -49,7 +49,8 @@ extern "C"
 
     int vp8dx_receive_compressed_data(struct VP8D_COMP* comp,
                                       size_t size, const uint8_t *dest,
-                                      int64_t time_stamp);
+                                      int64_t time_stamp,
+                                      uint8_t dry_run);
     int vp8dx_get_raw_frame(struct VP8D_COMP* comp, YV12_BUFFER_CONFIG *sd, int64_t *time_stamp, int64_t *time_end_stamp, vp8_ppflags_t *flags);
 
     vpx_codec_err_t vp8dx_get_reference(struct VP8D_COMP* comp, enum vpx_ref_frame_type ref_frame_flag, YV12_BUFFER_CONFIG *sd);

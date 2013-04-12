@@ -196,6 +196,28 @@ typedef vpx_codec_err_t (*vpx_codec_decode_fn_t)(vpx_codec_alg_priv_t  *ctx,
                                                  void        *user_priv,
                                                  long         deadline);
 
+/*!\brief read header data function pointer prototype
+ *
+ * Processes a buffer of coded data. 
+ * \param[in] ctx          Pointer to this instance's context
+ * \param[in] data         Pointer to this block of new coded data. If
+ *                         NULL, a #VPX_CODEC_CB_PUT_FRAME event is posted
+ *                         for the previously decoded frame.
+ * \param[in] data_sz      Size of the coded data, in bytes.
+ * \param[out] header      Header information. The structure have to be preallocated.
+ *
+ * \return Returns #VPX_CODEC_OK if the coded data was processed completely
+ *         and future pictures can be decoded without error. Otherwise,
+ *         see the descriptions of the other error codes in ::vpx_codec_err_t
+ *         for recoverability capabilities.
+ */
+typedef vpx_codec_err_t (*vpx_codec_read_header_fn_t)(vpx_codec_alg_priv_t  *ctx,
+                                                 const uint8_t         *data,
+                                                 unsigned int     data_sz,
+                                                 void        *user_priv,
+                                                 vpx_frame_header_info *header,
+                                                 long         deadline);
+
 /*!\brief Decoded frames iterator
  *
  * Iterates over a list of the frames available for display. The iterator
@@ -300,10 +322,12 @@ struct vpx_codec_iface {
   vpx_codec_get_mmap_fn_t   get_mmap;    /**< \copydoc ::vpx_codec_get_mmap_fn_t */
   vpx_codec_set_mmap_fn_t   set_mmap;    /**< \copydoc ::vpx_codec_set_mmap_fn_t */
   struct vpx_codec_dec_iface {
-    vpx_codec_peek_si_fn_t    peek_si;     /**< \copydoc ::vpx_codec_peek_si_fn_t */
-    vpx_codec_get_si_fn_t     get_si;      /**< \copydoc ::vpx_codec_peek_si_fn_t */
-    vpx_codec_decode_fn_t     decode;      /**< \copydoc ::vpx_codec_decode_fn_t */
-    vpx_codec_get_frame_fn_t  get_frame;   /**< \copydoc ::vpx_codec_get_frame_fn_t */
+    vpx_codec_peek_si_fn_t      peek_si;     /**< \copydoc ::vpx_codec_peek_si_fn_t */
+    vpx_codec_get_si_fn_t       get_si;      /**< \copydoc ::vpx_codec_peek_si_fn_t */
+    vpx_codec_decode_fn_t       decode;      /**< \copydoc ::vpx_codec_decode_fn_t */
+    vpx_codec_get_frame_fn_t    get_frame;   /**< \copydoc ::vpx_codec_get_frame_fn_t */
+    vpx_codec_read_header_fn_t  read_header;
+
   } dec;
   struct vpx_codec_enc_iface {
     vpx_codec_enc_cfg_map_t           *cfg_maps;      /**< \copydoc ::vpx_codec_enc_cfg_map_t */

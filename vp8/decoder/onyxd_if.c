@@ -305,7 +305,8 @@ int check_fragments_for_errors(VP8D_COMP *pbi)
  
 int vp8dx_receive_compressed_data(VP8D_COMP *pbi, size_t size,
                                   const uint8_t *source,
-                                  int64_t time_stamp)
+                                  int64_t time_stamp,
+                                  uint8_t dry_run)
 {
 #if HAVE_NEON
     int64_t dx_store_reg[8];
@@ -352,7 +353,7 @@ int vp8dx_receive_compressed_data(VP8D_COMP *pbi, size_t size,
 
     pbi->common.error.setjmp = 1;
 
-    retcode = vp8_decode_frame(pbi, 0);
+    retcode = vp8_decode_frame(pbi, dry_run);
 
     if (retcode < 0)
     {
