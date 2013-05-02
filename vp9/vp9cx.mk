@@ -65,7 +65,6 @@ VP9_CX_SRCS-yes += encoder/vp9_quantize.c
 VP9_CX_SRCS-yes += encoder/vp9_ratectrl.c
 VP9_CX_SRCS-yes += encoder/vp9_rdopt.c
 VP9_CX_SRCS-yes += encoder/vp9_sad_c.c
-VP9_CX_SRCS-yes += encoder/vp9_satd_c.c
 VP9_CX_SRCS-yes += encoder/vp9_segmentation.c
 VP9_CX_SRCS-yes += encoder/vp9_segmentation.h
 VP9_CX_SRCS-$(CONFIG_INTERNAL_STATS) += encoder/vp9_ssim.c
@@ -91,24 +90,30 @@ VP9_CX_SRCS-$(HAVE_MMX) += encoder/x86/vp9_sad_mmx.asm
 VP9_CX_SRCS-$(HAVE_MMX) += encoder/x86/vp9_dct_mmx.asm
 VP9_CX_SRCS-$(HAVE_MMX) += encoder/x86/vp9_dct_mmx.h
 VP9_CX_SRCS-$(HAVE_MMX) += encoder/x86/vp9_subtract_mmx.asm
-VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_dct_sse2.asm
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_variance_sse2.c
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_variance_impl_sse2.asm
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_sad_sse2.asm
+VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_sad4d_sse2.asm
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_fwalsh_sse2.asm
-VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_quantize_sse2.asm
+#VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_quantize_sse2.asm
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_subtract_sse2.asm
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_temporal_filter_apply_sse2.asm
 VP9_CX_SRCS-$(HAVE_SSE3) += encoder/x86/vp9_sad_sse3.asm
 VP9_CX_SRCS-$(HAVE_SSSE3) += encoder/x86/vp9_sad_ssse3.asm
 VP9_CX_SRCS-$(HAVE_SSSE3) += encoder/x86/vp9_variance_ssse3.c
 VP9_CX_SRCS-$(HAVE_SSSE3) += encoder/x86/vp9_variance_impl_ssse3.asm
-VP9_CX_SRCS-$(HAVE_SSSE3) += encoder/x86/vp9_quantize_ssse3.asm
+#VP9_CX_SRCS-$(HAVE_SSSE3) += encoder/x86/vp9_quantize_ssse3.asm
 VP9_CX_SRCS-$(HAVE_SSE4_1) += encoder/x86/vp9_sad_sse4.asm
-VP9_CX_SRCS-$(HAVE_SSE4_1) += encoder/x86/vp9_quantize_sse4.asm
+#VP9_CX_SRCS-$(HAVE_SSE4_1) += encoder/x86/vp9_quantize_sse4.asm
 VP9_CX_SRCS-$(ARCH_X86)$(ARCH_X86_64) += encoder/x86/vp9_quantize_mmx.asm
 VP9_CX_SRCS-$(ARCH_X86)$(ARCH_X86_64) += encoder/x86/vp9_encodeopt.asm
 VP9_CX_SRCS-$(ARCH_X86_64) += encoder/x86/vp9_ssim_opt.asm
+
+VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_dct_sse2.c
+ifeq ($(HAVE_SSE2),yes)
+vp9/encoder/x86/vp9_dct_sse2.c.d: CFLAGS += -msse2
+vp9/encoder/x86/vp9_dct_sse2.c.o: CFLAGS += -msse2
+endif
 
 
 VP9_CX_SRCS-yes := $(filter-out $(VP9_CX_SRCS_REMOVE-yes),$(VP9_CX_SRCS-yes))
